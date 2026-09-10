@@ -72,8 +72,6 @@
 		});
 	});
 
-	let frameId: number | undefined;
-
 	let pageEl: HTMLDivElement | undefined = $state();
 	let clockEl: HTMLDivElement | undefined = $state();
 	let circleClockEl: HTMLDivElement | undefined = $state();
@@ -81,9 +79,6 @@
 
 	onMount(() => {
 		resetBases();
-		const tick = () => { frameId = requestAnimationFrame(tick); };
-		frameId = requestAnimationFrame(tick);
-		return () => { if (frameId !== undefined) cancelAnimationFrame(frameId); };
 	});
 
 	usePageAnimation({
@@ -93,7 +88,8 @@
 			if (from === '/table' && pageEl && clockEl) {
 				gsap.from(taskCountNode, { y: -400, duration: 0.3, ease: EASE_OUT });
 				gsap.from(clockEl, { scale: 0.9, duration: 0.3, ease: EASE_OUT });
-				gsap.from(pageEl, { width: 720, duration: 0.35, ease: EASE_OUT });
+				// width ではなく scale で拡縮（毎フレームの reflow を避ける）
+				gsap.from(pageEl, { scale: 720 / pageEl.offsetWidth, duration: 0.35, ease: EASE_OUT });
 			} else if (from === '/clock') {
 				const tl = gsap.timeline();
 				tl.from(taskCountNode, { transform: 'translate(-50%,-130px)', duration: 0.4, ease: EASE_OUT }, 0);
@@ -113,8 +109,9 @@
 				tl.to(taskCountNode, { y: -400, duration: 0.3, ease: EASE_IN }, 0);
 				tl.to(circleClockNode, { opacity: 0, duration: 0.3, ease: EASE_IN }, 0);
 				if (clockEl) tl.to(clockEl, { scale: 0.9, duration: 0.3, ease: EASE_IN }, 0);
-				if (pageEl) tl.to(pageEl, { width: 720, duration: 0.3, ease: EASE_IN }, 0);
-				tl.call(done, [], 0.28);
+				// width ではなく scale で拡縮（毎フレームの reflow を避ける）
+				if (pageEl) tl.to(pageEl, { scale: 760 / pageEl.offsetWidth, duration: 0.3, ease: EASE_IN }, 0);
+				tl.call(done, [], 0.22);
 				return;
 			}
 			const tl = gsap.timeline({ onComplete: done });

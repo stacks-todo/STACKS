@@ -52,6 +52,23 @@
 	const DRAG_ROTATION_FACTOR = 0.15;
 	const DRAG_START_PX = 6;
 
+	/**
+	 * カルーセルの可視範囲。currentIndex から前後この枚数だけ DOM を生成する。
+	 * 背面カードは backface-visibility:hidden で見えないため、地平線(約90°/CARD_ANGLE≈4枚)＋余裕で十分。
+	 * これによりタスク数が多くても遷移時の DOM/SVG 生成・stagger アニメ対象が一定に保たれる。
+	 */
+	const VISIBLE_HALF = 6;
+
+	/** 実インデックス i を保持したまま可視範囲だけ切り出したリスト */
+	const visibleCards = $derived.by(() => {
+		const tasks = $pendingTasks;
+		const lo = Math.max(0, currentIndex - VISIBLE_HALF);
+		const hi = Math.min(tasks.length - 1, currentIndex + VISIBLE_HALF);
+		const out: { task: (typeof tasks)[number]; i: number }[] = [];
+		for (let i = lo; i <= hi; i++) out.push({ task: tasks[i], i });
+		return out;
+	});
+
 	function clampIndex(index: number) {
 		const tasks = $pendingTasks;
 		return Math.max(0, Math.min(index, tasks.length - 1));
@@ -320,13 +337,18 @@
 			gsap.from(tableContentEl, { scale: 1.06, duration: 0.35, ease: EASE_OUT });
 			const cardEls = tableContentEl.querySelectorAll('.card-inner');
 			if (cardEls.length) {
-				gsap.from(cardEls, {
-					opacity: 0,
-					y: 10,
-					duration: 0.3,
-					ease: EASE_OUT,
-					stagger: { amount: 0.12, from: 'center' },
-					delay: 0
+				// マウントフレームでは opacity:0 にするだけ（軽い書き込み）。
+				// stagger tween の生成はページ切り替え直後の重いフレームを避けて次フレームへ。
+				gsap.set(cardEls, { opacity: 0, y: 10 });
+				requestAnimationFrame(() => {
+					gsap.to(cardEls, {
+						opacity: 1,
+						y: 0,
+						duration: 0.3,
+						ease: EASE_OUT,
+						stagger: { amount: 0.12, from: 'center' },
+						clearProps: 'opacity,transform'
+					});
 				});
 			}
 		},
@@ -423,7 +445,7 @@
 			style="transform-style:preserve-3d"
 		>
 			<div bind:this={drum} class="w:stretch h:90px rel transform-style:preserve-3d">
-				{#each $pendingTasks as task, i (task.id)}
+				{#each visibleCards as { task, i } (task.id)}
 					{@const angle = i * CARD_ANGLE}
 					{@const active = i === currentIndex}
 					<div

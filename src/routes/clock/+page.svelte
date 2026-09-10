@@ -34,7 +34,8 @@
 				const tl = gsap.timeline();
 				if (numsWrap) tl.from(numsWrap, { scale: 2, duration: 0.4, ease: EASE_OUT }, 0);
 				if (handsWrapEl) tl.from(handsWrapEl, { scale: 1.6, duration: 0.3, ease: EASE_OUT }, 0);
-				if (centerCircleEl) tl.from(centerCircleEl, { width: 720, duration: 0.4, ease: EASE_OUT }, 0);
+				// width ではなく scale で拡縮（毎フレームの reflow を避ける）
+				if (centerCircleEl) tl.from(centerCircleEl, { scale: 720 / centerCircleEl.offsetWidth, duration: 0.4, ease: EASE_OUT }, 0);
 				if (clockWrap) tl.from(clockWrap, { opacity: 0, duration: 0.4, ease: EASE_OUT }, 0);
 				if (taskCountEl) tl.from(taskCountEl, { scale: 0.9, y: -20, duration: 0.4, ease: EASE_OUT }, 0);
 			} else if (from === '/pomodoro' || from === '/stack') {
@@ -53,9 +54,10 @@
 				const tl = gsap.timeline();
 				if (numsWrap) tl.to(numsWrap, { scale: 2, duration: 0.4, ease: EASE_IN, stagger: { amount: 0.14, from: 'random' } }, 0);
 				if (handsWrapEl) tl.to(handsWrapEl, { scale: 1.8, duration: 0.3, ease: EASE_IN }, 0);
-				if (centerCircleEl) tl.to(centerCircleEl, { width: 720, duration: 0.4, ease: EASE_IN }, 0);
+				// width ではなく scale で拡縮（毎フレームの reflow を避ける）
+				if (centerCircleEl) tl.to(centerCircleEl, { scale: 720 / centerCircleEl.offsetWidth, duration: 0.4, ease: EASE_IN }, 0);
 				if (clockWrap) tl.to(clockWrap, { opacity: 0, duration: 0.4, ease: EASE_IN }, 0);
-				if (taskCountEl) tl.to(taskCountEl, { scale: 0.9, y: -20, duration: 0.4, ease: EASE_IN }, 0);
+				if (taskCountEl) tl.to(taskCountEl, { scale: 0.3, y: -200, duration: 0.4, ease: EASE_IN }, 0);
 				tl.call(done, [], 0.3);
 				return;
 			}

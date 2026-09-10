@@ -77,8 +77,6 @@
 	let bubbles: Bubble[] = [];
 	let tickerCallback: (() => void) | null = null;
 
-	let frameId: number | undefined;
-
 	/** ハムスターホイール: 前フレームの回転値を記録してΔを計算 */
 	let prevPhysicsRotation = get(physicsRotation);
 	/** 接線力の倍率 (小さいほど回転の影響が小さい) */
@@ -104,6 +102,8 @@
 		},
 
 		animateOut(to, done) {
+			// 物理シミュレーションは退場アニメ中も動かし続ける（泡が途中で固まらないように）。
+			// ページ切り替え完了時に onMount の cleanup で gsap.ticker から除去される。
 			const taskCountNode = taskCountEl?.firstElementChild as HTMLElement | null;
 			const circleClockNode = circleClockEl?.firstElementChild as HTMLElement | null;
 			if (to === '/table') {
@@ -141,8 +141,6 @@
 	});
 
 	onMount(() => {
-		const tick = () => { frameId = requestAnimationFrame(tick); };
-		frameId = requestAnimationFrame(tick);
 		if (!canvas) return;
 
 		const tasks = get(pendingTasks);
@@ -317,7 +315,6 @@
 
 		return () => {
 			if (tickerCallback) gsap.ticker.remove(tickerCallback);
-			if (frameId !== undefined) cancelAnimationFrame(frameId);
 		};
 	});
 </script>
